@@ -1,0 +1,108 @@
+﻿<Window x:Class="CompGeomVis.DemoConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CompGeomVis"
+        mc:Ignorable="d"
+        Title="Create New Demo" Width="330" Height="210" WindowStartupLocation="CenterOwner" Padding="15">
+    <Grid>
+        <!--
+        
+        Algorithm:
+        Name:
+        Short Name:
+        X Min:             X Max:
+        Y Min:             Y Max:
+        Enable Grid Points: [ ]
+        X Start:           Y Start:
+        X Increment:       Y Increment:
+            
+        -->
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Algorithm:" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1"/>
+
+        <!--<TextBox Text="Graham Scan" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Stretch"/>-->
+        <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Stretch" x:Name="AlgoCombo">
+            <!--<ComboBoxItem Name="algo0">Dot Product</ComboBoxItem>
+            <ComboBoxItem Name="algo1">Cross Product</ComboBoxItem>-->
+            <ComboBoxItem Name="algo10">Graham Scan</ComboBoxItem>
+            <!--<ComboBoxItem Name="algo11">Melkam</ComboBoxItem>-->
+            <ComboBoxItem Name="algo20">Bowyer-Watson</ComboBoxItem>
+            <ComboBoxItem Name="algo21">Delaunator</ComboBoxItem>
+            <!--<ComboBoxItem Name="algo30">Voronoi via Delaunator</ComboBoxItem>-->
+            <!--<ComboBoxItem Name="algo40">Bounding Box</ComboBoxItem>-->
+            <ComboBoxItem Name="algo50">Polygon Intersection</ComboBoxItem>
+            <!--<ComboBoxItem Name="algo60">Trapezoidal Decomposition</ComboBoxItem>-->
+
+            <!--// 0: Dot Product
+            // 1: Cross Product
+            // 10: Graham Scan
+            // 11: Melkam
+            // 20: Bowyer-Watson
+            // 21: Delaunator
+            // 30: Voronoi via Delaunator
+            // 40: Rotating Calipers Bounding Box
+            // 50: Polygon Intersection Vector Chasing
+            // 60: Trapezoidal Decomposition-->
+
+        </ComboBox>
+
+        <TextBlock Text="Short Name:" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="1"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Stretch" x:Name="ShortName"/>
+
+        <TextBlock Text="Full Name:" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="1"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" HorizontalAlignment="Stretch" x:Name="FullName"/>
+
+        <TextBlock Text="X Min" Grid.Row="3" Grid.Column="1"/>
+        <TextBox Grid.Row="3" Grid.Column="2" Width="50" Text="-200" x:Name="xMinText"/>
+        <TextBlock Text="X Max" Grid.Row="3" Grid.Column="3"/>
+        <TextBox Grid.Row="3" Grid.Column="4" Width="50" Text="200" x:Name="xMaxText"/>
+
+        <TextBlock Text="Y Min" Grid.Row="4" Grid.Column="1"/>
+        <TextBox Grid.Row="4" Grid.Column="2" Width="50" Text="-150" x:Name="yMinText"/>
+        <TextBlock Text="Y Max" Grid.Row="4" Grid.Column="3"/>
+        <TextBox Grid.Row="4" Grid.Column="4" Width="50" Text="150" x:Name="yMaxText"/>
+
+
+        <!--<StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4">
+            <CheckBox IsChecked="True"/>
+            <TextBlock Text="Enable Grid Points"/>
+        </StackPanel>-->
+
+        <TextBlock Text="X Start" Grid.Row="6" Grid.Column="1"/>
+        <TextBox Grid.Row="6" Grid.Column="2" Width="50" Text="10" x:Name="xStartText"/>
+        <TextBlock Text="Y Start" Grid.Row="6" Grid.Column="3"/>
+        <TextBox Grid.Row="6" Grid.Column="4" Width="50" Text="10" x:Name="yStartText"/>
+
+        <TextBlock Text="X Count" Grid.Row="7" Grid.Column="1"/>
+        <TextBox Grid.Row="7" Grid.Column="2" Width="50" Text="60" x:Name="xCountText"/>
+        <TextBlock Text="Y Count" Grid.Row="7" Grid.Column="3"/>
+        <TextBox Grid.Row="7" Grid.Column="4" Width="50" Text="30" x:Name="yCountText"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="8" Grid.Column="1" Grid.ColumnSpan="4">
+            <Button Content="CREATE" Margin="3" x:Name="CreateButton" Click="CreateButton_Click"/>
+            <Button Content="CLOSE" Margin="3" x:Name="CloseButton" Click="CloseButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

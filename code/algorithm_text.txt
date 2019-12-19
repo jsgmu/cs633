@@ -1,0 +1,1489 @@
+﻿4
+2
+10
+Graham Scan
+An O(n log n) algorithm for determining a convex hull.
+The Graham scan is an O(n) algorithm to determine a convex hull, however it is limited by a requirement to process the points in sorted order, thus with the sort the algorithm becomes O(n log n).
+
+The algorithm itself uses a stack and considers three points at a time during its main operation.
+!
+There are two key degenerate cases with Graham scan:
+
+1. Not enough points. There must be at least 3 in order to compute the convex hull.
+
+2. All points are collinear. A convex hull is not defiend for a line.
+!
+let points be the list of points
+let stack = empty_stack()
+
+#start sort_start, sort
+find the lowest y-coordinate and leftmost point, called P0
+sort points by polar angle with P0, if several points have the same polar angle then only keep the farthest
+#end sort_start, sort
+
+#start clockwise, counterclockwise, none
+for point in points:
+    # pop the last point from the stack if we turn clockwise to reach this point
+    while count stack > 1 and ccw(next_to_top(stack), top(stack), point) < 0:
+        pop stack
+    push point to stack
+end
+#end clockwise, counterclockwise, none
+
+(from: https://en.wikipedia.org/wiki/Graham_scan)
+!
+public List<Vector> SortedInput { get; set; }
+public Vector LowestPoint { get; set; }
+public Stack<Vector> ResultStack { get; set; }
+
+public Vector FindLowestPoint()
+{
+#start sort_start
+    LowestPoint = null;
+
+    foreach(var v in InputPoints)
+    {
+        if(LowestPoint == null)
+        {
+            LowestPoint = v;
+        }
+        else if(v.Y < LowestPoint.Y || (v.Y == LowestPoint.Y && v.X < LowestPoint.X))
+        {
+            LowestPoint = v;
+        }
+    }
+
+    return LowestPoint;
+#end sort_start
+}
+
+#start sort
+// Comparison function for sort
+public int GrahamSort(Vector v1, Vector v2)
+{
+    if (v1 == v2 || (v1.X == v2.X && v1.Y == v2.Y))
+        return 0;
+
+    double thetaA = Math.Atan2(v1.Y - LowestPoint.Y, v1.X - LowestPoint.X);
+    double thetaB = Math.Atan2(v2.Y - LowestPoint.Y, v2.X - LowestPoint.X);
+
+    if (thetaA < thetaB)
+    {
+        return -1;
+    }
+    else if (thetaA > thetaB)
+    {
+        return 1;
+    }
+
+    double distanceA = GeomMath.Distance(LowestPoint, v1);
+    double distanceB = GeomMath.Distance(LowestPoint, v2);
+
+    if (distanceA < distanceB)
+    {
+        return -1;
+    }
+    else
+    {
+        return 1;
+    }
+}
+#end sort
+
+private bool AllPointsCollinear()
+{
+#start degenerate
+    if(InputPoints.Count <= 2)
+    {
+        return true;
+    }
+
+    Vector p1 = InputPoints[0];
+    Vector p2 = InputPoints[1];
+
+    for (int i = 2; i < InputPoints.Count; i++)
+    {
+        Vector p3 = InputPoints[i];
+
+        if (GeomMath.GetTurnDirection(p1, p2, p3) != GeomMath.DIRECTION_NONE)
+        {
+            return false;
+        }
+    }
+
+    return true;
+#end degenerate
+}
+
+public override void Run()
+{
+#start start_sort
+    LowestPoint = FindLowestPoint();
+
+    SortedInput = new List<Vector>();
+
+    // Algorithm step 1: sort, saved sorted input points
+    foreach(var v in InputPoints)
+    {
+        SortedInput.Add(new Vector { X = v.X, Y = v.Y });
+    }
+#end start_sort
+
+#start sort
+    SortedInput.Sort(GrahamSort);
+#end sort
+
+#start degenerate
+    // Check degenerate case #1: 0,1,2 points
+    if (SortedInput.Count <= 2)
+    {
+        return;
+    }
+
+    // Check degenerate case #2: all points on same line
+    if(AllPointsCollinear())
+    {
+        return;
+    }
+#end degenerate
+
+#start pre
+    Stack<Vector> grahamStack = new Stack<Vector>();
+
+    grahamStack.Push(SortedInput[0]);
+    grahamStack.Push(SortedInput[1]);
+#end pre
+
+    for (int i = 2; i < SortedInput.Count; i++)
+    {
+#start clockwise, counterclockwise, none
+        Vector head = SortedInput[i];
+        Vector middle = grahamStack.Pop();
+        Vector tail = grahamStack.Peek();
+
+        // we examine next point in sorted list, with top element of stack (which we pop)
+        // and 2nd element of stack (which we leave as new top of stack)
+
+        // Commentary: "The turn direction of these three points is calculated using
+        //              the cross product of these three points"
+        int turn = GeomMath.GetTurnDirection(tail, middle, head);
+
+#end clockwise, counterclockwise, none
+        // Standalone visualization: "The turn direction for these three points is: "
+        switch (turn)
+        {
+#start counterclockwise
+            case GeomMath.DIRECTION_COUNTERCLOCKWISE:
+                grahamStack.Push(middle);
+                grahamStack.Push(head);
+                break;
+#end counterclockwise
+#start clockwise
+            case GeomMath.DIRECTION_CLOCKWISE:
+                i--;
+                break;
+#end clockwise
+#start none
+            case GeomMath.DIRECTION_NONE:
+                grahamStack.Push(head);
+                break;
+#end none
+        }
+    }
+
+#start post
+    grahamStack.Push(SortedInput[0]);
+#end post
+}
+~
+4
+20
+Bowyer-Watson Delaunay Triangulation
+Incremental algorithm for Delaunay triangulation
+This is an incremental algorithm to derive a valid Delaunay triangulation of a polygon. In the best case operation, this algorithm takes O(n log n) time. Worst case (due to degenerate cases) brings operation to O(n^2).
+
+Adrian Bowyer and David Watson derived this algorithm independently and simultaneously.
+
+The bulk of the operation of this algorithm affecting its efficiency is locating triangles that contain a new point (the one being checked) in their circumcircles.
+
+"When a new vertex is inserted, each triangle whose circumcircle encloses the new vertex is no longer Delaunay, and is thus deleted" (http://web.mit.edu/ehliu/Public/ProjectX/Summer2005/delnotes.pdf)
+!
+One of the issues with Bowyer-Watson is potential for error due to floating point roundoff. Two triangles could end up with same circumcirle but only one triangle is deleted. (http://web.mit.edu/ehliu/Public/ProjectX/Summer2005/delnotes.pdf)
+
+By priming the algorithm with an enclosing triangle, there will never be a vertex located outside the convex hull of the points processed so far.
+!
+function BowyerWatson (pointList)
+    // pointList is a set of coordinates defining the points to be triangulated
+    triangulation := empty triangle mesh data structure
+    add super-triangle to triangulation // must be large enough to completely contain all the points in pointList
+    for each point in pointList do // add all the points one at a time to the triangulation
+        badTriangles := empty set
+        for each triangle in triangulation do // first find all the triangles that are no longer valid due to the insertion
+        if point is inside circumcircle of triangle
+            add triangle to badTriangles
+        polygon := empty set
+        for each triangle in badTriangles do // find the boundary of the polygonal hole
+        for each edge in triangle do
+            if edge is not shared by any other triangles in badTriangles
+                add edge to polygon
+        for each triangle in badTriangles do // remove them from the data structure
+        remove triangle from triangulation
+        for each edge in polygon do // re-triangulate the polygonal hole
+        newTri := form a triangle from edge to point
+        add newTri to triangulation
+    for each triangle in triangulation // done inserting points, now clean up
+        if triangle contains a vertex from original super-triangle
+        remove triangle from triangulation
+    return triangulation
+
+(from: https://en.wikipedia.org/wiki/Bowyer%E2%80%93Watson_algorithm)
+!
+// Code based on implementation from https://github.com/Bl4ckb0ne/delaunay-triangulation
+
+public List<DelaunayEdge> Edges { get; set; }
+public List<DelaunayTriangle> Triangles { get; set; }
+
+private void RemoveBadTriangles()
+{
+    for(int j = Triangles.Count - 1; j >= 0; j--)
+    {
+        if (Triangles[j].IsBad)
+            Triangles.RemoveAt(j);
+    }
+}
+
+// This is used to remove the super-triangle enclosing input points after processing is done
+private void RemoveTrianglesWithVertex(Vector p1, Vector p2, Vector p3)
+{
+    for (int j = Triangles.Count - 1; j >= 0; j--)
+    {
+        if (Triangles[j].HasVertex(p1) || Triangles[j].HasVertex(p2) || Triangles[j].HasVertex(p3))
+            Triangles.RemoveAt(j);
+    }
+}
+
+private void RemoveBadEdges()
+{
+    for (int j = Edges.Count - 1; j >= 0; j--)
+    {
+        if (Edges[j].BadEdge)
+            Edges.RemoveAt(j);
+    }
+}
+
+private void RemoveBadEdges(List<DelaunayEdge> edgeList)
+{
+    for(int j = edgeList.Count - 1; j >= 0; j--)
+    {
+        if (edgeList[j].BadEdge)
+            edgeList.RemoveAt(j);
+    }
+}
+
+public override void Run()
+{
+    if (InputPoints == null || InputPoints.Count < 3)
+    {
+        return;
+    }
+
+    double minx = InputPoints[0].X;
+    double miny = InputPoints[0].Y;
+    double maxx = minx;
+    double maxy = miny;
+
+    for(int i = 0; i < InputPoints.Count; i++)
+    {
+        var v = InputPoints[i];
+
+        if (v.X < minx) minx = v.X;
+        if (v.Y < miny) miny = v.Y;
+        if (v.X > maxx) maxx = v.X;
+        if (v.Y > maxy) maxy = v.Y;
+    }
+
+    double dx = maxx - minx;
+    double dy = maxy - miny;
+    double deltaMax = Math.Max(dx, dy);
+    double midx = 0.5 * (minx + maxx);
+    double midy = 0.5 * (miny + maxy);
+
+    Vector p1 = new Vector { X = midx - 20 * deltaMax, Y = midy - deltaMax };
+    Vector p2 = new Vector { X = midx, Y = midy + 20 * deltaMax };
+    Vector p3 = new Vector { X = midx + 20 * deltaMax, Y = midy - deltaMax };
+
+    Triangles.Clear();
+    Triangles.Add(new DelaunayTriangle { V1 = p1, V2 = p2, V3 = p3 });
+
+    for (int i = 0; i < InputPoints.Count; i++)
+    {
+        Vector p = InputPoints[i];
+        List<DelaunayEdge> polygon = new List<DelaunayEdge>();
+
+        foreach (var t in Triangles)
+        {
+            if(t.CircumcircleContainsVertex(p))
+            {
+                t.IsBad = true;
+                polygon.Add(new DelaunayEdge(t.V1, t.V2));
+                polygon.Add(new DelaunayEdge(t.V2, t.V3));
+                polygon.Add(new DelaunayEdge(t.V3, t.V1));
+            }
+        }
+
+        RemoveBadTriangles();
+
+        for (int c = 0; c < polygon.Count; c++)
+        {
+            for(int d = c + 1; d < polygon.Count; d++)
+            {
+                if(polygon[c].AlmostEquals(polygon[d]))
+                {
+                    polygon[c].BadEdge = true;
+                    polygon[d].BadEdge = true;
+                }
+            }
+        }
+
+        RemoveBadEdges(polygon);
+
+        foreach (var poly in polygon)
+        {
+            Triangles.Add(new DelaunayTriangle { V1 = poly.VStart, V2 = poly.VEnd, V3 = p });
+        }
+    }
+
+    RemoveTrianglesWithVertex(p1, p2, p3);
+
+    foreach(var t in Triangles)
+    {
+        Edges.Add(new DelaunayEdge { VStart = t.V1, VEnd = t.V2 });
+        Edges.Add(new DelaunayEdge { VStart = t.V2, VEnd = t.V3 });
+        Edges.Add(new DelaunayEdge { VStart = t.V3, VEnd = t.V1 });
+    }
+}
+~
+8
+50
+Vector Chasing
+Polygon Intersection via Vector Chasing
+Assuming convex polygons, it is possible to determine their intersection in linear time, specifically O(n+m) where n and m are the number of vertices of each polygon.
+
+This algorithm was developed by Joseph O'Rourke and three undergraduate students (Chien, Olson and Naddor) in 1982.
+
+The vertices of two polygons must be ordered counter-clockwise. By taking the edges of each polygon as directed vectors, and moving these vectors around each polygon, it is possible to map out the intersection by analysing these two vectors in various configurations.
+
+The core of the algorithm lies in how vectors tracing the edges of their polygons are advanced and analysed.
+
+As one example, if the vector B is "aiming toward" the line containing vector A but does not cross, then the vector B is advanced to the next edge of its polygon, in an effort to catch up to A.
+
+Recall, the cross product A x B corresponds to the z coordinate.
+
+If we take H(A) and H(B) to mean the open halfplane to the left each A or B, then...
+
+The advance rules boil down to:
+
+A x B > 0, b belongs to H(A), then advance A
+A x B > 0, b does not belong to H(A), then advance B
+
+A x B < 0, a belongs to H(B), then advance B
+A x B < 0, a does not belong to H(B), then advance A
+
+(description abbreviated from Computational Geometry in C by Joseph O'Rourke)
+!
+There are several degenerate cases:
+
+- No intersection
+- A and B overlap and are oppositely oriented (A dot B < 0), then overlap is total intersection
+- A and B are parallel (A x B = 0) and a is strictly right of B, and b is strictly right of A, then no intersection of polygons
+- A and B are collinear, then one must be advanced and no point included in output
+
+!
+Intersection of Convex Polygons
+
+Choose A and B arbitrarily
+
+repeat
+   if A intersects B then
+      check for termination
+	  update an "inside" flag
+   Advance either A or B, depending on geometric conditions
+until both A and B cycle their polygons
+
+Handle cases: no intersection, one polygon overlaps other
+!
+public const int STATUS_UNKNOWN = -1;
+public const int STATUS_0 = 0;
+public const int STATUS_1 = 1;
+public const int STATUS_E = 2;
+public const int STATUS_V = 3;
+
+public const int INFLAG_UNKNOWN = -1;
+public const int INFLAG_PIN = 0;
+public const int INFLAG_QIN = 1;
+
+private Vector currentStartPoint;
+public PolygonModel IntersectingPolygon { get; set; }
+
+public Vector FindLowestPoint(List<Vector> poly)
+{
+    LowestPoint = null;
+
+    foreach (var v in poly)
+    {
+        if (LowestPoint == null)
+        {
+            LowestPoint = v;
+        }
+        else if (v.Y < LowestPoint.Y || (v.Y == LowestPoint.Y && v.X < LowestPoint.X))
+        {
+            LowestPoint = v;
+        }
+    }
+
+    return LowestPoint;
+}
+
+public int VectorCompare(Vector v1, Vector v2)
+{
+    if (v1 == v2 || (v1.X == v2.X && v1.Y == v2.Y))
+        return 0;
+
+    double thetaA = Math.Atan2(v1.Y - LowestPoint.Y, v1.X - LowestPoint.X);
+    double thetaB = Math.Atan2(v2.Y - LowestPoint.Y, v2.X - LowestPoint.X);
+
+    // Angle of difference vector v1 and LowestPoint, and the x-axis
+    // If v1 has the smaller angle, return -1
+    if (thetaA < thetaB)
+    {
+        return -1;
+    }
+    // If v2 has the smaller angle, return 1
+    else if (thetaA > thetaB)
+    {
+        return 1;
+    }
+
+    // If angles are the same, then choose the point that is closer to LowestPoint
+    double distanceA = GeomMath.Distance(LowestPoint, v1);
+    double distanceB = GeomMath.Distance(LowestPoint, v2);
+
+    if (distanceA < distanceB)
+    {
+        return -1;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+// Polygon points are sorted by smallest angle of difference vectors (to LowestPoint) and x-axis
+// Equal angles are tie-broken by smaller linear distance to LowestPoint
+// LowestPoint is local to a specific polygon as the polygon vertices are sorted independently
+private void SortPolygons()
+{
+    LowestPoint = FindLowestPoint(UnsortedPoly1);
+    SortedPoly1 = AlgorithmUtil.CopyVectorList(UnsortedPoly1);
+    SortedPoly1.Sort(VectorCompare);
+
+    LowestPoint = FindLowestPoint(UnsortedPoly2);
+    SortedPoly2 = AlgorithmUtil.CopyVectorList(UnsortedPoly2);
+    SortedPoly2.Sort(VectorCompare);
+}
+
+public int AreaSign(Vector a, Vector b, Vector c)
+{
+    double area2;
+
+    area2 = (b.X - a.X) * (double)(c.Y - a.Y) - (c.X - a.X) * (double)(b.Y - a.Y);
+
+    if (area2 > 0.5) 
+       return 1;
+    else if (area2 < -0.5) 
+       return -1;
+    else 
+       return 0;
+}
+
+public bool Collinear(Vector a, Vector b, Vector c)
+{
+    return AreaSign(a, b, c) == 0;
+}
+
+// returns true if "c" is on a line ab and is between points a and b
+// line ab cannot be vertical
+public bool Between(Vector a, Vector b, Vector c)
+{
+    if(a.X != b.X)
+    {
+        return (a.X <= c.X && c.X <= b.X) || (a.X >= c.X && c.X >= b.X);
+    }
+
+    return (a.Y <= c.Y && c.Y <= b.Y) || (a.Y >= c.Y && c.Y >= b.Y);
+}
+
+public void Assign(Vector p, Vector a)
+{
+    p.X = a.X;
+    p.Y = a.Y;
+}
+
+// Return values:
+//   0: if points a,b,c are not collinear
+//   e: c is on line ab and is between the points a and b (and p becomes c)
+//   e: d is on line ab and is between the points a and b (and p becomes d)
+//   e: a is on line cd and is between the points c and d (and p becomes a)
+//   e: b is on line cd and is between the points c and d (and p becomes b)
+//   0: default return value
+
+public int ParallelInt(Vector a, Vector b, Vector c, Vector d, Vector p)
+{
+    if (!Collinear(a, b, c))
+        return STATUS_0;
+
+    if(Between(a, b, c))
+    {
+        Assign(p, c);
+        return STATUS_E;
+    }
+
+    if(Between(a, b, d))
+    {
+        Assign(p, d);
+        return STATUS_E;
+    }
+
+    if(Between(c, d, a))
+    {
+        Assign(p, a);
+        return STATUS_E;
+    }
+
+    if (Between(c, d, b))
+    {
+        Assign(p, b);
+        return STATUS_E;
+    }
+
+    return STATUS_0;
+}
+
+/*---------------------------------------------------------------------
+SegSegInt: Finds the point of intersection p between two closed
+segments ab and cd.  Returns p and a char with the following meaning:
+   'e': The segments collinearly overlap, sharing a point.
+   'v': An endpoint (vertex) of one segment is on the other segment,
+        but 'e' doesn't hold.
+   '1': The segments intersect properly (i.e., they share a point and
+        neither 'v' nor 'e' holds).
+   '0': The segments do not intersect (i.e., they share no points).
+Note that two collinear segments that share just one point, an endpoint
+of each, returns 'e' rather than 'v' as one might expect.
+---------------------------------------------------------------------*/
+public int SegSegInt(Vector a, Vector b, Vector c, Vector d, Vector p, Vector q)
+{
+    double s, t;
+    double num, denom;
+    int code = STATUS_UNKNOWN;
+
+    denom = a.X * (d.Y - c.Y) + b.X * (c.Y - d.Y) + d.X * (b.Y - a.Y) + c.X * (a.Y - b.Y);
+
+    ///* If denom is zero, then segments are parallel: handle separately. */
+    if(denom == 0)
+    {
+        return ParallelInt(a, b, c, d, p, q);
+    }
+
+    num = a.X * (d.Y - c.Y) + c.X * (a.Y - d.Y) + d.X * (c.Y - a.Y);
+
+    if (num == 0 || num == denom)
+        code = STATUS_V;
+
+    s = num / denom;
+
+    num = -(a.X * (c.Y - b.Y) + b.X * (a.Y - c.Y) + c.X * (b.Y - a.Y));
+
+    if (num == 0 || num == denom)
+        code = STATUS_V;
+
+    t = num / denom;
+
+    if (0 < s && s < 1.0 && 0 < t && t < 1.0)
+        code = STATUS_1;
+    else if (0 > s || s > 1.0 || 0 > t || t > 1.0)
+        code = STATUS_0;
+
+    p.X = a.X + s * (b.X - a.X);
+    p.Y = a.Y + s * (b.Y - a.Y);
+
+    return code;
+}
+
+public int InOut(Vector tp, int inFlag, int aHB, int bHA)
+{
+    // Lineto done at caller, this is different from cited code
+
+    if (aHB > 0)
+        return INFLAG_PIN;
+    else if (bHA > 0)
+        return INFLAG_QIN;
+
+    return inFlag;
+}
+
+private void MoveTo(Vector p)
+{
+    currentStartPoint = new Vector { X = p.X, Y = p.Y };
+}
+
+private void LineTo(Vector p)
+{
+    if (IntersectingPolygon == null)
+        IntersectingPolygon = new PolygonModel();
+
+    if(!GeomMath.AlmostEqual(currentStartPoint, p))
+    {
+        IntersectingPolygon.Lines.Add(new LineModel {
+            StartPoint = new Vector { X = currentStartPoint.X, Y = currentStartPoint.Y },
+            EndPoint = new Vector { X = p.X, Y = p.Y }
+        });
+        currentStartPoint = new Vector { X = p.X, Y = p.Y };
+    }
+}
+
+public void Compute()
+{
+    SortPolygons();
+
+    List<Vector> P = SortedPoly1;
+    List<Vector> Q = SortedPoly2;
+
+    int n = SortedPoly1.Count;
+    int m = SortedPoly2.Count;
+    int a, b;
+    int a1, b1;
+    Vector A = new Vector(), B = new Vector();
+    int cross;
+    int bHA, aHB;
+    Vector origin = new Vector { X = 0, Y = 0 };
+    Vector p = new Vector(), q = new Vector();
+    int inFlag;
+    int aa, ba;
+    bool firstPoint;
+    Vector p0 = new Vector();
+    int code;
+
+    a = 0; b = 0; aa = 0; ba = 0;
+    inFlag = INFLAG_UNKNOWN;
+    firstPoint = true;
+    do
+    {
+        a1 = (a + n - 1) % n;
+        b1 = (b + m - 1) % m;
+
+        // SubVec(P[a], P[a1], A);
+        A.X = P[a].X - P[a1].X;
+        A.Y = P[a].Y - P[a1].Y;
+
+        // SubVec(Q[b], Q[b1], B);
+        B.X = Q[b].X - Q[b1].X;
+        B.Y = Q[b].Y - Q[b1].Y;
+
+        cross = AreaSign(origin, A, B);
+        aHB = AreaSign(Q[b1], Q[b], P[a]);
+        bHA = AreaSign(P[a1], P[a], Q[b]);
+
+        code = SegSegInt(P[a1], P[a], Q[b1], Q[b], p, q);
+
+        if(code == STATUS_1 || code == STATUS_V)
+        {
+            if(inFlag == STATUS_UNKNOWN && firstPoint)
+            {
+                aa = 0;
+                ba = 0;
+                firstPoint = false;
+                p0.X = p.X;
+                p0.Y = p.Y;
+                MoveTo(p0);
+            }
+
+            LineTo(p);
+            inFlag = InOut(p, inFlag, aHB, bHA);
+        }
+
+        if (code == STATUS_E && GeomMath.DotProduct(A, B) < 0)
+        {
+            // print shared segment
+            // return
+        }
+
+        if(cross == 0 && aHB < 0 && bHA < 0)
+        {
+            // disjoint
+            // return
+        }
+        else if(cross == 0 && aHB == 0 && bHA == 0)
+        {
+            // advance but do not output point, pg 262
+            if(inFlag == INFLAG_PIN)
+            {
+                ba++;
+                b = (b + 1) % m;
+            } else {
+                aa++;
+                a = (a + 1) % n;
+            }
+        }
+        else if(cross >= 0)
+        {
+            if(bHA > 0)
+            {
+                if(inFlag == INFLAG_PIN)
+                {
+                    LineTo(P[a]);
+                }
+                aa++;
+                a = (a + 1) % n;
+            } else
+            {
+                if (inFlag == INFLAG_QIN)
+                {
+                    LineTo(Q[b]);
+                }
+                ba++;
+                b = (b + 1) % m;
+            }
+        } else
+        {
+            if(aHB > 0)
+            {
+                if (inFlag == INFLAG_QIN)
+                {
+                    LineTo(Q[b]);
+                }
+                ba++;
+                b = (b + 1) % m;
+            } else
+            {
+                if (inFlag == INFLAG_PIN)
+                {
+                    LineTo(P[a]);
+                }
+                aa++;
+                a = (a + 1) % n;
+            }
+        }
+    } while ( ((aa < n) || (ba < m)) && (aa < 2*n) && (ba < 2*m) );
+
+    if(!firstPoint)
+    {
+        // close intesection, line to p0
+        LineTo(p0);
+    }
+
+    if (inFlag == INFLAG_UNKNOWN)
+    {
+        // boundaries do not cross
+    }
+}
+
+public override void Run()
+{
+    UnsortedPoly1 = new List<Vector>();
+
+    foreach(var v in InputPolygons[0].Lines)
+    {
+        UnsortedPoly1.Add(new Vector { X = v.StartPoint.X, Y = v.StartPoint.Y, Alternates = v.StartPoint.Alternates });
+    }
+
+    UnsortedPoly2 = new List<Vector>();
+
+    foreach (var v in InputPolygons[1].Lines)
+    {
+        UnsortedPoly2.Add(new Vector { X = v.StartPoint.X, Y = v.StartPoint.Y, Alternates = v.StartPoint.Alternates });
+    }
+
+    Compute();
+}
+~
+5
+21
+Delaunator
+An array optimized algorithm for Delaunay triangulation
+This is an optimized Delaunay triangulation that has a stated benchmark of sub-1 second operation on 1 million points.
+
+The code also features conversion to Voronoi diagram and convex hull.
+
+At the moment this algorithm hasn't been instrumented or analysed in this project.
+
+Code from https://github.com/nol1fe/delaunator-sharp
+Based on https://github.com/mapbox/delaunator
+!
+(No pseudocode)
+!
+private readonly double EPSILON = Math.Pow(2, -52);
+private int[] EDGE_STACK = new int[512];
+public int[] Triangles { get; private set; }
+public int[] Halfedges { get; private set; }
+
+private int hashSize;
+private int[] hullPrev;
+private int[] hullNext;
+private int[] hullTri;
+private int[] hullHash;
+
+private double _cx;
+private double _cy;
+
+private int trianglesLen;
+private double[] coords;
+private int hullStart;
+private int hullSize;
+private int[] hull;
+
+public override void Run()
+{
+    if (InputPoints.Count() < 2)
+    {
+        throw new ArgumentOutOfRangeException("Need at least 3 points");
+    }
+    //Points = points.ToList();
+    coords = new double[InputPoints.Count * 2];
+
+    for (var i = 0; i < InputPoints.Count; i++)
+    {
+        var p = InputPoints.ElementAtOrDefault(i);
+        coords[2 * i] = p.X;
+        coords[2 * i + 1] = p.Y;
+    }
+
+    var n = coords.Length >> 1;
+    var maxTriangles = 2 * n - 5;
+
+    Triangles = new int[maxTriangles * 3];
+
+    Halfedges = new int[maxTriangles * 3];
+    hashSize = (int)Math.Ceiling(Math.Sqrt(n));
+
+    hullPrev = new int[n];
+    hullNext = new int[n];
+    hullTri = new int[n];
+    hullHash = new int[hashSize];
+
+    var ids = new int[n];
+
+    var minX = double.PositiveInfinity;
+    var minY = double.PositiveInfinity;
+    var maxX = double.NegativeInfinity;
+    var maxY = double.NegativeInfinity;
+
+    for (var i = 0; i < n; i++)
+    {
+        var x = coords[2 * i];
+        var y = coords[2 * i + 1];
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+        ids[i] = i;
+    }
+
+    var cx = (minX + maxX) / 2;
+    var cy = (minY + maxY) / 2;
+
+    var minDist = double.PositiveInfinity;
+    int i0 = 0, i1 = 0, i2 = 0;
+
+    // pick a seed point close to the center
+    for (int i = 0; i < n; i++)
+    {
+        var d = Dist(cx, cy, coords[2 * i], coords[2 * i + 1]);
+        if (d < minDist)
+        {
+            i0 = i;
+            minDist = d;
+        }
+    }
+    var i0x = coords[2 * i0];
+    var i0y = coords[2 * i0 + 1];
+
+    minDist = double.PositiveInfinity;
+
+    // find the point closest to the seed
+    for (int i = 0; i < n; i++)
+    {
+        if (i == i0) continue;
+        var d = Dist(i0x, i0y, coords[2 * i], coords[2 * i + 1]);
+        if (d < minDist && d > 0)
+        {
+            i1 = i;
+            minDist = d;
+        }
+    }
+
+    var i1x = coords[2 * i1];
+    var i1y = coords[2 * i1 + 1];
+
+    var minRadius = double.PositiveInfinity;
+
+    // find the third point which forms the smallest circumcircle with the first two
+    for (int i = 0; i < n; i++)
+    {
+        if (i == i0 || i == i1) continue;
+        var r = Circumradius(i0x, i0y, i1x, i1y, coords[2 * i], coords[2 * i + 1]);
+        if (r < minRadius)
+        {
+            i2 = i;
+            minRadius = r;
+        }
+    }
+    var i2x = coords[2 * i2];
+    var i2y = coords[2 * i2 + 1];
+
+    if (minRadius == double.PositiveInfinity)
+    {
+        throw new Exception("No Delaunay triangulation exists for this input.");
+    }
+
+    if (Orient(i0x, i0y, i1x, i1y, i2x, i2y))
+    {
+        var i = i1;
+        var x = i1x;
+        var y = i1y;
+        i1 = i2;
+        i1x = i2x;
+        i1y = i2y;
+        i2 = i;
+        i2x = x;
+        i2y = y;
+    }
+
+    var center = Circumcenter(i0x, i0y, i1x, i1y, i2x, i2y);
+    _cx = center.X;
+    _cy = center.Y;
+
+    var dists = new double[n];
+    for (var i = 0; i < n; i++)
+    {
+        dists[i] = Dist(coords[2 * i], coords[2 * i + 1], center.X, center.Y);
+    }
+
+    // sort the points by distance from the seed triangle circumcenter
+    Quicksort(ids, dists, 0, n - 1);
+
+    // set up the seed triangle as the starting hull
+    hullStart = i0;
+    hullSize = 3;
+
+    hullNext[i0] = hullPrev[i2] = i1;
+    hullNext[i1] = hullPrev[i0] = i2;
+    hullNext[i2] = hullPrev[i1] = i0;
+
+    hullTri[i0] = 0;
+    hullTri[i1] = 1;
+    hullTri[i2] = 2;
+
+    hullHash[HashKey(i0x, i0y)] = i0;
+    hullHash[HashKey(i1x, i1y)] = i1;
+    hullHash[HashKey(i2x, i2y)] = i2;
+
+    trianglesLen = 0;
+    AddTriangle(i0, i1, i2, -1, -1, -1);
+
+    double xp = 0;
+    double yp = 0;
+
+    for (var k = 0; k < ids.Length; k++)
+    {
+        var i = ids[k];
+        var x = coords[2 * i];
+        var y = coords[2 * i + 1];
+
+        // skip near-duplicate points
+        if (k > 0 && Math.Abs(x - xp) <= EPSILON && Math.Abs(y - yp) <= EPSILON) continue;
+        xp = x;
+        yp = y;
+
+        // skip seed triangle points
+        if (i == i0 || i == i1 || i == i2) continue;
+
+        // find a visible edge on the convex hull using edge hash
+        var start = 0;
+        for (var j = 0; j < hashSize; j++)
+        {
+            var key = HashKey(x, y);
+            start = hullHash[(key + j) % hashSize];
+            if (start != -1 && start != hullNext[start]) break;
+        }
+
+        start = hullPrev[start];
+        var e = start;
+        var q = hullNext[e];
+
+        while (!Orient(x, y, coords[2 * e], coords[2 * e + 1], coords[2 * q], coords[2 * q + 1]))
+        {
+            e = q;
+            if (e == start)
+            {
+                e = int.MaxValue;
+                break;
+            }
+
+            q = hullNext[e];
+        }
+
+        if (e == int.MaxValue) continue; // likely a near-duplicate point; skip it
+
+        // add the first triangle from the point
+        var t = AddTriangle(e, i, hullNext[e], -1, -1, hullTri[e]);
+
+        // recursively flip triangles from the point until they satisfy the Delaunay condition
+        hullTri[i] = Legalize(t + 2);
+        hullTri[e] = t; // keep track of boundary triangles on the hull
+        hullSize++;
+
+        // walk forward through the hull, adding more triangles and flipping recursively
+        var next = hullNext[e];
+        q = hullNext[next];
+
+        while (Orient(x, y, coords[2 * next], coords[2 * next + 1], coords[2 * q], coords[2 * q + 1]))
+        {
+            t = AddTriangle(next, i, q, hullTri[i], -1, hullTri[next]);
+            hullTri[i] = Legalize(t + 2);
+            hullNext[next] = next; // mark as removed
+            hullSize--;
+            next = q;
+
+            q = hullNext[next];
+        }
+
+        // walk backward from the other side, adding more triangles and flipping
+        if (e == start)
+        {
+            q = hullPrev[e];
+
+            while (Orient(x, y, coords[2 * q], coords[2 * q + 1], coords[2 * e], coords[2 * e + 1]))
+            {
+                t = AddTriangle(q, i, e, -1, hullTri[e], hullTri[q]);
+                Legalize(t + 2);
+                hullTri[q] = t;
+                hullNext[e] = e; // mark as removed
+                hullSize--;
+                e = q;
+
+                q = hullPrev[e];
+            }
+        }
+
+        // update the hull indices
+        hullStart = hullPrev[i] = e;
+        hullNext[e] = hullPrev[next] = i;
+        hullNext[i] = next;
+
+        // save the two new edges in the hash table
+        hullHash[HashKey(x, y)] = i;
+        hullHash[HashKey(coords[2 * e], coords[2 * e + 1])] = e;
+    }
+
+    hull = new int[hullSize];
+    var s = hullStart;
+    for (var i = 0; i < hullSize; i++)
+    {
+        hull[i] = s;
+        s = hullNext[s];
+    }
+
+    hullPrev = hullNext = hullTri = null; // get rid of temporary arrays
+
+    //// trim typed triangle mesh arrays
+    Triangles = Triangles.Take(trianglesLen).ToArray();
+    Halfedges = Halfedges.Take(trianglesLen).ToArray();
+}
+
+#region CreationLogic
+private int Legalize(int a)
+{
+    var i = 0;
+    var ar = 0;
+
+    // recursion eliminated with a fixed-size stack
+    while (true)
+    {
+        var b = Halfedges[a];
+
+        /* if the pair of triangles doesn't satisfy the Delaunay condition
+            * (p1 is inside the circumcircle of [p0, pl, pr]), flip them,
+            * then do the same check/flip recursively for the new pair of triangles
+            *
+            *           pl                    pl
+            *          /||\                  /  \
+            *       al/ || \bl            al/    \a
+            *        /  ||  \              /      \
+            *       /  a||b  \    flip    /___ar___\
+            *     p0\   ||   /p1   =>   p0\---bl---/p1
+            *        \  ||  /              \      /
+            *       ar\ || /br             b\    /br
+            *          \||/                  \  /
+            *           pr                    pr
+            */
+        int a0 = a - a % 3;
+        ar = a0 + (a + 2) % 3;
+
+        if (b == -1)
+        { // convex hull edge
+            if (i == 0) break;
+            a = EDGE_STACK[--i];
+            continue;
+        }
+
+        var b0 = b - b % 3;
+        var al = a0 + (a + 1) % 3;
+        var bl = b0 + (b + 2) % 3;
+
+        var p0 = Triangles[ar];
+        var pr = Triangles[a];
+        var pl = Triangles[al];
+        var p1 = Triangles[bl];
+
+        var illegal = InCircle(
+            coords[2 * p0], coords[2 * p0 + 1],
+            coords[2 * pr], coords[2 * pr + 1],
+            coords[2 * pl], coords[2 * pl + 1],
+            coords[2 * p1], coords[2 * p1 + 1]);
+
+        if (illegal)
+        {
+            Triangles[a] = p1;
+            Triangles[b] = p0;
+
+            var hbl = Halfedges[bl];
+
+            // edge swapped on the other side of the hull (rare); fix the halfedge reference
+            if (hbl == -1)
+            {
+                var e = hullStart;
+                do
+                {
+                    if (hullTri[e] == bl)
+                    {
+                        hullTri[e] = a;
+                        break;
+                    }
+                    e = hullNext[e];
+                } while (e != hullStart);
+            }
+            Link(a, hbl);
+            Link(b, Halfedges[ar]);
+            Link(ar, bl);
+
+            var br = b0 + (b + 1) % 3;
+
+            // don't worry about hitting the cap: it can only happen on extremely degenerate input
+            if (i < EDGE_STACK.Length)
+            {
+                EDGE_STACK[i++] = br;
+            }
+        }
+        else
+        {
+            if (i == 0) break;
+            a = EDGE_STACK[--i];
+        }
+    }
+
+    return ar;
+}
+private bool InCircle(double ax, double ay, double bx, double by, double cx, double cy, double px, double py)
+{
+    var dx = ax - px;
+    var dy = ay - py;
+    var ex = bx - px;
+    var ey = by - py;
+    var fx = cx - px;
+    var fy = cy - py;
+
+    var ap = dx * dx + dy * dy;
+    var bp = ex * ex + ey * ey;
+    var cp = fx * fx + fy * fy;
+
+    return dx * (ey * cp - bp * fy) -
+            dy * (ex * cp - bp * fx) +
+            ap * (ex * fy - ey * fx) < 0;
+}
+private int AddTriangle(int i0, int i1, int i2, int a, int b, int c)
+{
+    var t = trianglesLen;
+
+    Triangles[t] = i0;
+    Triangles[t + 1] = i1;
+    Triangles[t + 2] = i2;
+
+    Link(t, a);
+    Link(t + 1, b);
+    Link(t + 2, c);
+
+    trianglesLen += 3;
+    return t;
+}
+private void Link(int a, int b)
+{
+    Halfedges[a] = b;
+    if (b != -1) Halfedges[b] = a;
+}
+private int HashKey(double x, double y) => (int)(Math.Floor(PseudoAngle(x - _cx, y - _cy) * hashSize) % hashSize);
+private double PseudoAngle(double dx, double dy)
+{
+    var p = dx / (Math.Abs(dx) + Math.Abs(dy));
+    return (dy > 0 ? 3 - p : 1 + p) / 4; // [0..1]
+}
+private void Quicksort(int[] ids, double[] dists, int left, int right)
+{
+    if (right - left <= 20)
+    {
+        for (var i = left + 1; i <= right; i++)
+        {
+            var temp = ids[i];
+            var tempDist = dists[temp];
+            var j = i - 1;
+            while (j >= left && dists[ids[j]] > tempDist) ids[j + 1] = ids[j--];
+            ids[j + 1] = temp;
+        }
+    }
+    else
+    {
+        var median = (left + right) >> 1;
+        var i = left + 1;
+        var j = right;
+        Swap(ids, median, i);
+        if (dists[ids[left]] > dists[ids[right]]) Swap(ids, left, right);
+        if (dists[ids[i]] > dists[ids[right]]) Swap(ids, i, right);
+        if (dists[ids[left]] > dists[ids[i]]) Swap(ids, left, i);
+
+        var temp = ids[i];
+        var tempDist = dists[temp];
+        while (true)
+        {
+            do i++; while (dists[ids[i]] < tempDist);
+            do j--; while (dists[ids[j]] > tempDist);
+            if (j < i) break;
+            Swap(ids, i, j);
+        }
+        ids[left + 1] = ids[j];
+        ids[j] = temp;
+
+        if (right - i + 1 >= j - left)
+        {
+            Quicksort(ids, dists, i, right);
+            Quicksort(ids, dists, left, j - 1);
+        }
+        else
+        {
+            Quicksort(ids, dists, left, j - 1);
+            Quicksort(ids, dists, i, right);
+        }
+    }
+}
+private void Swap(int[] arr, int i, int j)
+{
+    var tmp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = tmp;
+}
+private bool Orient(double px, double py, double qx, double qy, double rx, double ry) => (qy - py) * (rx - qx) - (qx - px) * (ry - qy) < 0;
+private double Circumradius(double ax, double ay, double bx, double by, double cx, double cy)
+{
+    var dx = bx - ax;
+    var dy = by - ay;
+    var ex = cx - ax;
+    var ey = cy - ay;
+    var bl = dx * dx + dy * dy;
+    var cl = ex * ex + ey * ey;
+    var d = 0.5 / (dx * ey - dy * ex);
+    var x = (ey * bl - dy * cl) * d;
+    var y = (dx * cl - ex * bl) * d;
+    return x * x + y * y;
+}
+private Vector Circumcenter(double ax, double ay, double bx, double by, double cx, double cy)
+{
+    var dx = bx - ax;
+    var dy = by - ay;
+    var ex = cx - ax;
+    var ey = cy - ay;
+    var bl = dx * dx + dy * dy;
+    var cl = ex * ex + ey * ey;
+    var d = 0.5 / (dx * ey - dy * ex);
+    var x = ax + (ey * bl - dy * cl) * d;
+    var y = ay + (dx * cl - ex * bl) * d;
+
+    return new Vector { X = x, Y = y };
+}
+private double Dist(double ax, double ay, double bx, double by)
+{
+    var dx = ax - bx;
+    var dy = ay - by;
+    return dx * dx + dy * dy;
+}
+#endregion CreationLogic
+
+#region GetMethods
+public IEnumerable<DelaunatorTriangle> GetTriangles()
+{
+    for (var t = 0; t < Triangles.Length / 3; t++)
+    {
+        //yield return new DelaunatorTriangle(t, GetTrianglePoints(t));
+        yield return new DelaunatorTriangle { Index = t, Points = GetTrianglePoints(t).ToList() };
+    }
+}
+public IEnumerable<DelaunatorEdge> GetEdges()
+{
+    for (var e = 0; e < Triangles.Length; e++)
+    {
+        if (e > Halfedges[e])
+        {
+            var p = InputPoints.ElementAtOrDefault(Triangles[e]);
+            var q = InputPoints.ElementAtOrDefault(Triangles[NextHalfedge(e)]);
+            yield return new DelaunatorEdge { Index = e, P = p, Q = q };
+        }
+    }
+}
+public IEnumerable<DelaunatorEdge> GetVoronoDelaunatorEdges()
+{
+    for (var e = 0; e < Triangles.Length; e++)
+    {
+        if (e < Halfedges[e])
+        {
+            var p = GetTriangleCenter(TriangleOfEdge(e));
+            var q = GetTriangleCenter(TriangleOfEdge(Halfedges[e]));
+            yield return new DelaunatorEdge { Index = e, P = p, Q = q };
+        }
+    }
+}
+public IEnumerable<DelaunatorVoronoiCell> GetVoronoiCells()
+{
+    var seen = new HashSet<int>();  // of point ids
+    for (var triangleId = 0; triangleId < Triangles.Length; triangleId++)
+    {
+        var id = Triangles[NextHalfedge(triangleId)];
+        if (!seen.Any(x => x == id))
+        {
+            seen.Add(id);
+            var edges = EdgesAroundPoint(triangleId);
+            var triangles = edges.Select(x => TriangleOfEdge(x));
+            var vertices = triangles.Select(x => GetTriangleCenter(x)).ToList();
+            yield return new DelaunatorVoronoiCell { Index = id, Points = vertices };
+        }
+    }
+}
+public IEnumerable<DelaunatorEdge> GetHullEdges() => CreateHull(GetHullPoints());
+public IEnumerable<Vector> GetHullPoints() => hull.Select(x => InputPoints.ElementAtOrDefault(x));
+public IEnumerable<Vector> GetTrianglePoints(int t) => PointsOfTriangle(t).Select(p => InputPoints.ElementAtOrDefault(p));
+public IEnumerable<Vector> GetRellaxedPoints() => GetVoronoiCells().Select(x => GetCentroid(x.Points));
+public IEnumerable<DelaunatorEdge> GetEdgesOfTriangle(int t) => CreateHull(EdgesOfTriangle(t).Select(p => InputPoints.ElementAtOrDefault(p)));
+public IEnumerable<DelaunatorEdge> CreateHull(IEnumerable<Vector> points) => points.Zip(points.Skip(1).Append(points.FirstOrDefault()), (a, b) => new DelaunatorEdge { Index = 0, P = a, Q = b }).OfType<DelaunatorEdge>();
+public Vector GetTriangleCenter(int t)
+{
+    var vertices = GetTrianglePoints(t);
+    return GetCentroid(vertices);
+}
+public Vector GetCircumcenter(Vector a, Vector b, Vector c)
+{
+    var ad = a.X * a.X + a.Y * a.Y;
+    var bd = b.X * b.X + b.Y * b.Y;
+    var cd = c.X * c.X + c.Y * c.Y;
+    var D = 2 * (a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y));
+    return new Vector
+    {
+        X = 1 / D * (ad * (b.Y - c.Y) + bd * (c.Y - a.Y) + cd * (a.Y - b.Y)),
+        Y = 1 / D * (ad * (c.X - b.X) + bd * (a.X - c.X) + cd * (b.X - a.X))
+    };
+}
+public Vector GetCentroid(IEnumerable<Vector> points)
+{
+    double accumulatedArea = 0.0f;
+    double centerX = 0.0f;
+    double centerY = 0.0f;
+
+    for (int i = 0, j = points.Count() - 1; i < points.Count(); j = i++)
+    {
+        var temp = points.ElementAtOrDefault(i).X * points.ElementAtOrDefault(j).Y - points.ElementAtOrDefault(j).X * points.ElementAtOrDefault(i).Y;
+        accumulatedArea += temp;
+        centerX += (points.ElementAtOrDefault(i).X + points.ElementAtOrDefault(j).X) * temp;
+        centerY += (points.ElementAtOrDefault(i).Y + points.ElementAtOrDefault(j).Y) * temp;
+    }
+
+    if (Math.Abs(accumulatedArea) < 1E-7f)
+        return new Vector();
+
+    accumulatedArea *= 3f;
+    return new Vector { X = centerX / accumulatedArea, Y = centerY / accumulatedArea };
+}
+
+#endregion GetMethods
+
+#region ForEachMethods
+public void ForEachTriangle(Action<DelaunatorTriangle> callback)
+{
+    foreach (var triangle in GetTriangles())
+    {
+        callback?.Invoke(triangle);
+    }
+}
+public void ForEachTriangleEdge(Action<DelaunatorEdge> callback)
+{
+    foreach (var edge in GetEdges())
+    {
+        callback?.Invoke(edge);
+    }
+}
+public void ForEachVoronoDelaunatorEdge(Action<DelaunatorEdge> callback)
+{
+    foreach (var edge in GetVoronoDelaunatorEdges())
+    {
+        callback?.Invoke(edge);
+    }
+}
+public void ForEachVoronoiCell(Action<DelaunatorVoronoiCell> callback)
+{
+    foreach (var cell in GetVoronoiCells())
+    {
+        callback?.Invoke(cell);
+    }
+}
+
+#endregion ForEachMethods
+
+#region Methods based on index
+public IEnumerable<int> EdgesAroundPoint(int start)
+{
+    var incoming = start;
+    do
+    {
+        yield return incoming;
+        var outgoing = NextHalfedge(incoming);
+        incoming = Halfedges[outgoing];
+    } while (incoming != -1 && incoming != start);
+}
+public IEnumerable<int> PointsOfTriangle(int t) => EdgesOfTriangle(t).Select(e => Triangles[e]);
+public IEnumerable<int> TrianglesAdjacentToTriangle(int t)
+{
+    var adjacentTriangles = new List<int>();
+    var triangleEdges = EdgesOfTriangle(t);
+    foreach (var e in triangleEdges)
+    {
+        var opposite = Halfedges[e];
+        if (opposite >= 0)
+        {
+            adjacentTriangles.Add(TriangleOfEdge(opposite));
+        }
+    }
+    return adjacentTriangles;
+}
+
+public int NextHalfedge(int e) => (e % 3 == 2) ? e - 2 : e + 1;
+public int PreviousHalfedge(int e) => (e % 3 == 0) ? e + 2 : e - 1;
+public int[] EdgesOfTriangle(int t) => new int[] { 3 * t, 3 * t + 1, 3 * t + 2 };
+public int TriangleOfEdge(int e) { return (int)Math.Floor((double)(e / 3)); }
+
+#endregion Methods based on index
+~

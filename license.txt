@@ -1,0 +1,8 @@
+License
+-------
+
+No official license
+
+The only allowed use of this code / repository is private evaluation / experimentation
+
+If you are looking for specific implementations of computational geometry algorithms, this is not the place to look

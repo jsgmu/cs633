@@ -1,0 +1,297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6C7E777A-6B57-4DBC-A9A2-4CAE38970157}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>CompGeomVis</RootNamespace>
+    <AssemblyName>CompGeomVis</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ScintillaNET, Version=3.6.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\jacobslusser.ScintillaNET.3.6.3\lib\net40\ScintillaNET.dll</HintPath>
+    </Reference>
+    <Reference Include="ScintillaNET.WPF">
+      <HintPath>..\lib\ScintillaNET.WPF.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="Xceed.Wpf.AvalonDock, Version=3.6.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>packages\Extended.Wpf.Toolkit.3.6.0\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero, Version=3.6.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>packages\Extended.Wpf.Toolkit.3.6.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro, Version=3.6.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>packages\Extended.Wpf.Toolkit.3.6.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010, Version=3.6.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>packages\Extended.Wpf.Toolkit.3.6.0\lib\net40\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
+    </Reference>
+    <Reference Include="Xceed.Wpf.Toolkit, Version=3.6.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
+      <HintPath>packages\Extended.Wpf.Toolkit.3.6.0\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="AlgorithmBase.cs" />
+    <Compile Include="AlgorithmFactory.cs" />
+    <Compile Include="AlgorithmHistoryItem.cs" />
+    <Compile Include="AlgorithmModel.cs" />
+    <Compile Include="algotracking\AddNonIndexedPolygonCommand.cs" />
+    <Compile Include="algotracking\HighlightNonIndexedLineCommand.cs" />
+    <Compile Include="algotracking\AddNonIndexedLineCommand.cs" />
+    <Compile Include="algotracking\AddTextStatusCommand.cs" />
+    <Compile Include="algotracking\AlgorithmCompleteCommand.cs" />
+    <Compile Include="algotracking\AlgorithmHistory.cs" />
+    <Compile Include="algotracking\AlgorithmStartingCommand.cs" />
+    <Compile Include="algotracking\AlgorithmStateCommand.cs" />
+    <Compile Include="algotracking\AlgorithmStatusLayer.cs" />
+    <Compile Include="algotracking\AlgorithmStepStartingCommand.cs" />
+    <Compile Include="algotracking\AlgorithmUtil.cs" />
+    <Compile Include="algotracking\AnnotateInputLineCommand.cs" />
+    <Compile Include="algotracking\AnnotateInputPointCommand.cs" />
+    <Compile Include="algotracking\ClearLineHighlightsCommand.cs" />
+    <Compile Include="algotracking\ClearPointHighlightsCommand.cs" />
+    <Compile Include="algotracking\ClearTextStatusCommand.cs" />
+    <Compile Include="algotracking\AddLineCommand.cs" />
+    <Compile Include="algotracking\HighlightInputLineCommand.cs" />
+    <Compile Include="algotracking\HighlightInputPointCommand.cs" />
+    <Compile Include="algotracking\HighlightLiveCodeSectionsCommand.cs" />
+    <Compile Include="algotracking\HighlightPointsCommand.cs" />
+    <Compile Include="algotracking\HighlightPseudoCodeSectionsCommand.cs" />
+    <Compile Include="algotracking\InputPointsSortedCommand.cs" />
+    <Compile Include="algotracking\UpdatePointSetCommand.cs" />
+    <Compile Include="algotracking\VectorProcessingStackUpdatedCommand.cs" />
+    <Compile Include="basics\CrossProduct.cs" />
+    <Compile Include="basics\DotProduct.cs" />
+    <Compile Include="canvas\CanvasComponent.cs" />
+    <Compile Include="canvas\CanvasConfiguration.cs" />
+    <Compile Include="canvas\CanvasLayer.cs" />
+    <Compile Include="canvas\CanvasWrapper.cs" />
+    <Compile Include="canvas\CanvasPoint.cs" />
+    <Compile Include="canvas\CoordHelper.cs" />
+    <Compile Include="canvas\Line.cs" />
+    <Compile Include="canvas\GridPoint.cs" />
+    <Compile Include="canvas\Polygon.cs" />
+    <Compile Include="CloseableHeader.xaml.cs">
+      <DependentUpon>CloseableHeader.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CloseableTab.cs" />
+    <Compile Include="convexity\ConvexityCheck.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="bowyerwatson\BowyerWatsonAlgorithm.cs" />
+    <Compile Include="bowyerwatson\DelaunayEdge.cs" />
+    <Compile Include="bowyerwatson\DelaunayTriangle.cs" />
+    <Compile Include="datasources\DataGridLine.cs" />
+    <Compile Include="datasources\DataGridPoint.cs" />
+    <Compile Include="datasources\LinesDataSource.cs" />
+    <Compile Include="datasources\PointsDataSource.cs" />
+    <Compile Include="delaunator\Delaunator.cs" />
+    <Compile Include="delaunator\DelaunatorEdge.cs" />
+    <Compile Include="delaunator\DelaunatorTriangle.cs" />
+    <Compile Include="delaunator\DelaunatorVoronoiCell.cs" />
+    <Compile Include="DemoAreaControl.xaml.cs">
+      <DependentUpon>DemoAreaControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DemoConfigWindow.xaml.cs">
+      <DependentUpon>DemoConfigWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EventBus.cs" />
+    <Compile Include="events\AddStatus.cs" />
+    <Compile Include="events\AddTextStatus.cs" />
+    <Compile Include="events\AlgorithmComplete.cs" />
+    <Compile Include="events\AlgorithmSetup.cs" />
+    <Compile Include="events\AlgorithmStepStarted.cs" />
+    <Compile Include="events\ClearHighlights.cs" />
+    <Compile Include="events\ClearStatus.cs" />
+    <Compile Include="events\ClearTextStatus.cs" />
+    <Compile Include="events\DemoCreated.cs" />
+    <Compile Include="events\HighlightInputPoint.cs" />
+    <Compile Include="events\HighlightLiveCode.cs" />
+    <Compile Include="events\InputLineCreated.cs" />
+    <Compile Include="events\InputPointSelected.cs" />
+    <Compile Include="events\LineSetUpdated.cs" />
+    <Compile Include="events\PointSetUpdated.cs" />
+    <Compile Include="events\VectorProcessingStackUpdated.cs" />
+    <Compile Include="fortune\BeachSection.cs" />
+    <Compile Include="fortune\BinarySearchTree.cs" />
+    <Compile Include="fortune\Cell.cs" />
+    <Compile Include="fortune\Circle.cs" />
+    <Compile Include="fortune\CircleEvent.cs" />
+    <Compile Include="fortune\Edge.cs" />
+    <Compile Include="fortune\FortunesAlgorithm.cs" />
+    <Compile Include="fortune\FortuneWithTree.cs" />
+    <Compile Include="fortune\HalfEdge.cs" />
+    <Compile Include="fortune\Bisector.cs" />
+    <Compile Include="fortune\QueueItem.cs" />
+    <Compile Include="fortune\RBTree.cs" />
+    <Compile Include="fortune\TreeNode.cs" />
+    <Compile Include="fortune\Vertex.cs" />
+    <Compile Include="fortune\Site.cs" />
+    <Compile Include="GeomMath.cs" />
+    <Compile Include="grahamscan\GrahamScanAlgorithm.cs" />
+    <Compile Include="IHandle.cs" />
+    <Compile Include="LinesDisplayControl.xaml.cs">
+      <DependentUpon>LinesDisplayControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LinesGridControl.xaml.cs">
+      <DependentUpon>LinesGridControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="models\AxisModel.cs" />
+    <Compile Include="PointSetsDisplayControl.xaml.cs">
+      <DependentUpon>PointSetsDisplayControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LineModel.cs" />
+    <Compile Include="melkman\MelkmanHull.cs" />
+    <Compile Include="models\DemoModel.cs" />
+    <Compile Include="PointGridDisplayControl.xaml.cs">
+      <DependentUpon>PointGridDisplayControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="polygonintersection\ConvexPolyIntersection.cs" />
+    <Compile Include="PolygonModel.cs" />
+    <Compile Include="RenderVisualService.cs" />
+    <Compile Include="StackDrawControl.xaml.cs">
+      <DependentUpon>StackDrawControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TreeDrawControl.xaml.cs">
+      <DependentUpon>TreeDrawControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Vector.cs" />
+    <Compile Include="WindowHelper.cs" />
+    <Page Include="CloseableHeader.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DemoAreaControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="DemoConfigWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LinesDisplayControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LinesGridControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PointSetsDisplayControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="PointGridDisplayControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="StackDrawControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TreeDrawControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="rotatingcalipers\BoundingBox.cs" />
+    <None Include="rotatingcalipers\BoundingBoxAlgorithm.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icons\new.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="algorithm_text.txt" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

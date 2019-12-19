@@ -1,0 +1,131 @@
+﻿<Window x:Class="CompGeomVis.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CompGeomVis"
+        mc:Ignorable="d" xmlns:sn="http://scintillanet.codeplex.com"
+        Title="CS633 Final Project: Algorithm Visualizations" Height="450" Width="800"
+        WindowState="Maximized">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="5"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="0">
+            <Menu HorizontalContentAlignment="Stretch" HorizontalAlignment="Stretch" Visibility="Collapsed">
+                <Menu.Items>
+                    <MenuItem x:Name="fileMenu" Header="File">
+                        <MenuItem.Items>
+                            <MenuItem x:Name="openItem" Header="Open"/>
+                            <MenuItem x:Name="exitItem" Header="Exit"/>
+                        </MenuItem.Items>
+                    </MenuItem>
+                    <MenuItem x:Name="devMenu" Header="DEVELOPMENT ONLY">
+                        <MenuItem.Items>
+                            <MenuItem x:Name="testGrid" Header="Create Grid" Click="TestGrid_Click"/>
+                            <MenuItem x:Name="testSave" Header="Save Canvas" Click="TestSave_Click"/>
+                            <MenuItem x:Name="fortuneButton" Header="Fortune Test" Click="FortuneButton_Click"/>
+                            <MenuItem x:Name="polyIntersectionTest" Header="Polygon Intersection" Click="PolyIntersectionTest_Click"/>
+                            <MenuItem x:Name="loadDemoTest" Click="LoadDemoTest_Click" Header="Load Demo Test"/>
+                        </MenuItem.Items>
+                    </MenuItem>
+                </Menu.Items>
+            </Menu>
+        </StackPanel>
+        
+        <Grid Grid.Row="1" x:Name="mainGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="0">
+                    <Button Content="CREATE DEMO" x:Name="createDemoButton" Click="CreateDemoButton_Click" Margin="2"/>
+                    <Button Content="SAVE" x:Name="saveWorkspace" Click="SaveWorkspace_Click" Margin="2"/>
+                </StackPanel>
+
+                <TreeView Grid.Row="1" x:Name="demoTree" SelectedItemChanged="TreeView_SelectedItemChanged">
+                    <!--<TreeView.Resources>
+                        <ContextMenu x:Key="algorithmMenu">
+                            <MenuItem Header="Create Demo" x:Name="CreateDemoMenuItem" Click="CreateDemoMenuItem_Click"/>
+                        </ContextMenu>
+                        <ContextMenu x:Key="demoMenu">
+                            <MenuItem Header="Open" Click="MenuItem_Click"/>
+                            <MenuItem Header="Delete" Click="MenuItem_Click"/>
+                        </ContextMenu>
+                    </TreeView.Resources>-->
+                    <TreeViewItem Header="Basics" IsExpanded="True" IsEnabled="False">
+                        <TreeViewItem Header="Dot Product" Tag="0" x:Name="algorithm0"/>
+                        <TreeViewItem Header="Cross Product" Tag="1" x:Name="algorithm1"/>
+                        <TreeViewItem Header="Convexity Check" Tag="2" x:Name="algorithm2"/>
+                    </TreeViewItem>
+
+                    <TreeViewItem Header="Algorithms" IsExpanded="True">
+                        <TreeViewItem Header="Convex Hull" IsExpanded="True">
+                            <TreeViewItem Header="Graham Scan" Tag="10" x:Name="algorithm3"/>
+                        </TreeViewItem>
+                        <TreeViewItem Header="Triangulation" IsExpanded="True">
+                            <TreeViewItem Header="Bowyer-Watson" Tag="20" x:Name="algorithm4"/>
+                            <TreeViewItem Header="Delaunator" Tag="21" x:Name="algorithm5"/>
+                        </TreeViewItem>
+                        <TreeViewItem Header="Polygon Intersection" IsExpanded="True">
+                            <TreeViewItem Header="Vector Chasing" Tag="50" x:Name="algorithm6"/>
+                        </TreeViewItem>
+                    </TreeViewItem>
+                </TreeView>
+            </Grid>
+
+            <GridSplitter Grid.Column="1"
+                              Grid.Row="0"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Stretch"
+                              ShowsPreview="True"
+                              Height="{Binding Path=ActualHeight, ElementName=mainGrid}"
+                              Width="5"></GridSplitter>
+            <Grid Grid.Column="2" Grid.Row="0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <TabControl x:Name="DemoAreaTabs"  SelectionChanged="DemoAreaTabs_SelectionChanged">
+                </TabControl>
+            </Grid>
+        </Grid>
+
+        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch"/>
+
+        <DockPanel Grid.Row="3">
+            <TabControl DockPanel.Dock="Top">
+                <TabItem Header="Description">
+                    <TextBox x:Name="descriptionTextBox" FontFamily="Consolas" FontSize="14" Text="" IsReadOnly="True"/>
+                </TabItem>
+                <TabItem Header="Degenerate Cases">
+                    <TextBox x:Name="degenerateCasesTextBox" FontFamily="Consolas" FontSize="14" IsReadOnly="True"/>
+                </TabItem>
+                <TabItem Header="Commentary">
+                    <TextBox x:Name="commentaryTextBox" FontFamily="Consolas" FontSize="12" IsReadOnly="True"/>
+                </TabItem>
+                <TabItem Header="Input">
+                    <local:PointSetsDisplayControl/>
+                </TabItem>
+                <TabItem Header="Pseudo-Code">
+                    <sn:ScintillaWPF Name="pseudoCodeControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                </TabItem>
+                <TabItem Header="Live Code">
+                    <sn:ScintillaWPF Name="liveCodeControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </Grid>
+</Window>
